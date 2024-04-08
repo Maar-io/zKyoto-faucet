@@ -26,7 +26,6 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       const data = await contract.availableDrips();
-      console.log("availableDrips", data);
       setAvailableDrips(data.toString());
     };
 
@@ -76,13 +75,11 @@ function App() {
     const tx = await contractWithSigner.drip(address);
     // Wait for the transaction to be mined
     const receipt = await tx.wait();
-
-    console.log('Transaction mined:', receipt);
   };
   return (
     <div className="App">
       <header className="App-header">
-        <img src="Astar_zkEVM_network_icon.png" alt="Logo" style={{ position: 'absolute', top: 0, left: 0, width: '100px', height: '100px' }} />
+        <img src="/Astar_zkEVM_network_icon.png" alt="Logo" style={{ position: 'absolute', top: 0, left: 0, width: '100px', height: '100px' }} />
         <h1>
           zKyoto ETH Faucet
         </h1>
