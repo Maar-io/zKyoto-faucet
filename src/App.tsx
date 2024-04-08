@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import './App.css';
-import { RPC, CONTRACT_ADDRESS, CONTRACT_ABI } from './const';
+import { ZKYOTO_CHAIN_ID, CONTRACT_ADDRESS, CONTRACT_ABI } from './const';
 import logo from "./logo.svg";
 
 declare global {
@@ -23,13 +23,44 @@ function App() {
   // const provider = new ethers.JsonRpcProvider(RPC);
 
   useEffect(() => {
-    const connectMetaMask = async () => {  
+    const connectMetaMask = async () => {
       if (window.ethereum) {
         provider = new ethers.providers.Web3Provider(window.ethereum);
         await provider.send('eth_requestAccounts', []); // <- this prompts user to connect MetaMask
         const s = provider.getSigner();
         setSigner(s);
 
+        // Get the connected network
+        const network = await provider.getNetwork();
+
+        // Check if the connected network is correct
+        if (network.chainId !== ZKYOTO_CHAIN_ID) {
+          try {
+            // Prompt the user to switch to the correct network
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: `0x${ZKYOTO_CHAIN_ID.toString(16)}` }], // Convert the chain ID to hexadecimal
+            });
+          } catch (switchError) {
+            // This error code indicates that the chain has not been added to MetaMask.
+            if ((switchError as any).code === 4902) {
+              try {
+                // If the chain hasn't been added, add it!
+                await window.ethereum.request({
+                  method: 'wallet_addEthereumChain',
+                  params: [{
+                    chainId: `0x${ZKYOTO_CHAIN_ID.toString(16)}`,
+                    // Add other parameters like chainName, nativeCurrency, rpcUrls, blockExplorerUrls
+                  }],
+                });
+              } catch (addError) {
+                console.error('Failed to add network:', addError);
+              }
+            }
+            console.error('Failed to switch network:', switchError);
+          }
+          return;
+        }
 
         // Create the contract instance after the provider is set
         const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
@@ -37,11 +68,10 @@ function App() {
       } else {
         alert('Please install MetaMask!');
       }
-
     };
-  
+
     connectMetaMask();
-  }, []); 
+  }, []);
 
 
   useEffect(() => {
@@ -66,7 +96,7 @@ function App() {
   const handleInputChange = (event: { target: { value: any; }; }) => {
     const value = event.target.value;
     const isValid = /^0x[a-fA-F0-9]{40}$/.test(value);
-  
+
     if (isValid || value === '') {
       setAddress(value);
       if (value !== '') {
@@ -106,7 +136,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-      <img src="/zKyoto-faucet/Astar_zkEVM_network_icon.png" alt="Logo" style={{ position: 'absolute', top: 0, left: 0, width: '100px', height: '100px', padding: '10px' }} />        <h1>
+        <img src="/zKyoto-faucet/Astar_zkEVM_network_icon.png" alt="Logo" style={{ position: 'absolute', top: 0, left: 0, width: '100px', height: '100px', padding: '10px' }} />        <h1>
           zKyoto ETH Faucet
         </h1>
       </header>
@@ -118,13 +148,13 @@ function App() {
         placeholder="Enter ETH address"
         style={{ width: '350px' }}
       />
-      <button onClick={handleButtonClick} disabled={address === '' || next!=="0" }>Drip</button>
+      <button onClick={handleButtonClick} disabled={address === '' || next !== "0"}>Drip</button>
       {address && next !== "0" && (
         <p>
           next available drip in: {getRemainingTime()}
         </p>
-      )}    
-      </div>
+      )}
+    </div>
   );
 }
 

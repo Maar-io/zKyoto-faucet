@@ -8,3 +8,5 @@ export const CONTRACT_ABI = [
     "function setDripPeriod(uint256 _dripPeriod) external",
     "function nextDrip(address account) public view returns (uint256)"
   ];
+
+export const ZKYOTO_CHAIN_ID = 6038361;
