@@ -15,19 +15,18 @@ contract ZKyotoFaucet is Ownable {
     constructor() Ownable(msg.sender) {}
 
     /// @notice Drips ETH to msg sender
-    function drip() external {
-        address recipient = msg.sender;
+    function drip(address to) external {
         require(
-            canGetDrip(claims[recipient]),
+            canGetDrip(claims[to]),
             "Already claimed in the last 24hours"
         );
         // Drip Ether
-        (bool sent, ) = recipient.call{value: DRIP_AMOUNT}("");
+        (bool sent, ) = to.call{value: DRIP_AMOUNT}("");
         require(sent, "Failed dripping ETH");
 
-        claims[recipient] = block.timestamp;
+        claims[to] = block.timestamp;
 
-        emit FaucetDripped(recipient);
+        emit FaucetDripped(to);
     }
 
     /// @notice Returns number of available drips

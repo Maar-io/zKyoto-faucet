@@ -21,12 +21,23 @@ describe("ZKyotoFaucet", function () {
     return { zKyotoFaucet, owner, addr1 };
   }
 
+  it("Should return the correct amount of available drips", async function () {
+    const { zKyotoFaucet } = await loadFixture(deployZKyotoFaucetFixture);
+
+    // Call availableDrips
+    const availableDrips = await zKyotoFaucet.availableDrips();
+    console.log("availableDrips", availableDrips);
+
+    // Check that the availableDrips is correct
+    expect(availableDrips).to.be.gt(0);
+  });
+
   describe("drip", function () {
     it("Should drip ETH to the sender", async function () {
       const { zKyotoFaucet, owner, addr1 } = await loadFixture(deployZKyotoFaucetFixture);
 
       // Connect to the contract with addr1 and call drip
-      const tx = await zKyotoFaucet.connect(addr1).drip();
+      const tx = await zKyotoFaucet.connect(addr1).drip(addr1.address);
 
 
       // Wait for the transaction to be mined
@@ -49,10 +60,10 @@ describe("ZKyotoFaucet", function () {
     const { zKyotoFaucet, owner, addr1 } = await loadFixture(deployZKyotoFaucetFixture);
 
     // Connect to the contract with addr1 and call drip
-    await zKyotoFaucet.connect(addr1).drip();
+    await zKyotoFaucet.connect(addr1).drip(addr1.address);
 
     // Try to drip again immediately
-    await expect(zKyotoFaucet.connect(addr1).drip()).to.be.revertedWith("Already claimed in the last 24hours");
+    await expect(zKyotoFaucet.connect(addr1).drip(addr1.address)).to.be.revertedWith("Already claimed in the last 24hours");
   });
 
   describe("nextDrip", function () {
