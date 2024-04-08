@@ -16,6 +16,7 @@ function App() {
   const [next, setNext] = useState<string>("0");
   const [contract, setContract] = useState<ethers.Contract | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
+  const [dripAmount, setDripAmount] = useState<string>("");
 
   let provider: any = null;
 
@@ -79,11 +80,15 @@ function App() {
       if (contract) {
         const data = await contract.availableDrips();
         setAvailableDrips(data.toString());
+
+        const dripAmountWei = await contract.DRIP_AMOUNT();
+        const dripAmountEther = ethers.utils.formatEther(dripAmountWei);
+        setDripAmount(dripAmountEther.toString());
       }
     };
 
     fetchData();
-  }, [availableDrips]);
+  }, [availableDrips, dripAmount, contract]);
 
   const getRemainingTime = () => {
     const date = new Date(Number(next) * 1000);
@@ -140,7 +145,8 @@ function App() {
           zKyoto ETH Faucet
         </h1>
       </header>
-      <img src="/zKyoto-faucet/faucet.png" alt="Faucet image" style={{ display: 'block', marginLeft: '0', marginRight: 'auto', width: '50%' }} />      <p>available drips: {availableDrips}</p>
+      <img src="/zKyoto-faucet/faucet.png" alt="Faucet image" style={{ display: 'block', marginLeft: '0', marginRight: 'auto', width: '50%' }} />
+      <p>Amount per drip {dripAmount} ETH. Available drips: {availableDrips}</p>
       <input
         type="text"
         value={address}
@@ -148,10 +154,11 @@ function App() {
         placeholder="Enter ETH address"
         style={{ width: '350px' }}
       />
-      <button onClick={handleButtonClick} disabled={address === '' || next !== "0"}>Drip</button>
-      {address && next !== "0" && (
+      <div>
+        <button className="drip-button" onClick={handleButtonClick} disabled={address === '' || next !== "0"}>Drip</button>
+      </div>      {address && next !== "0" && (
         <p>
-          next available drip in: {getRemainingTime()}
+          Your next available drip in: {getRemainingTime()} h
         </p>
       )}
     </div>

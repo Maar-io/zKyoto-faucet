@@ -43,3 +43,11 @@
 body {
   background-color: darkblue;
 }
+
+.drip-button {
+  font-family: 'Londrina Solid', cursive;
+  font-size: 1.5em; /* 50% larger than the base font size */
+  background-color: cyan;
+  color: black;
+  margin-top: 1em; /* Move the button below the input */
+}
