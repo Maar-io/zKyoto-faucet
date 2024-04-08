@@ -15,10 +15,17 @@ function App() {
   const [address, setAddress] = useState<string>("");
   const [next, setNext] = useState<string>("0");
 
+  let signer: any = null;
+  let provider: any = null;
+
   // Create a contract instance
   // const provider = new ethers.JsonRpcProvider(RPC);
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const signer = provider.getSigner();
+  if (window.ethereum) {
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    signer = provider.getSigner();
+  } else {
+    alert('Please install MetaMask!');
+  }
   const contractAddress = CONTRACT_ADDRESS;
   const contractABI = CONTRACT_ABI;
   const contract = new ethers.Contract(contractAddress, contractABI, provider);
@@ -39,6 +46,7 @@ function App() {
     const seconds = date.getUTCSeconds();
     return `${hours}:${minutes}:${seconds}`;
   };
+
   const handleInputChange = (event: { target: { value: any; }; }) => {
     const value = event.target.value;
     const isValid = /^0x[a-fA-F0-9]{40}$/.test(value);
@@ -79,12 +87,11 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src="/Astar_zkEVM_network_icon.png" alt="Logo" style={{ position: 'absolute', top: 0, left: 0, width: '100px', height: '100px' }} />
-        <h1>
+      <img src="/zKyoto-faucet/Astar_zkEVM_network_icon.png" alt="Logo" style={{ position: 'absolute', top: 0, left: 0, width: '100px', height: '100px', padding: '10px' }} />        <h1>
           zKyoto ETH Faucet
         </h1>
       </header>
-      <img src="/faucet.png" alt="Faucet image" style={{ display: 'block', marginLeft: '0', marginRight: 'auto', width: '50%' }} />      <p>available drips: {availableDrips}</p>
+      <img src="/zKyoto-faucet/faucet.png" alt="Faucet image" style={{ display: 'block', marginLeft: '0', marginRight: 'auto', width: '50%' }} />      <p>available drips: {availableDrips}</p>
       <input
         type="text"
         value={address}
