@@ -14,26 +14,42 @@ function App() {
   const [availableDrips, setAvailableDrips] = useState<string>("");
   const [address, setAddress] = useState<string>("");
   const [next, setNext] = useState<string>("0");
+  const [contract, setContract] = useState<ethers.Contract | null>(null);
+  const [signer, setSigner] = useState<ethers.Signer | null>(null);
 
-  let signer: any = null;
   let provider: any = null;
 
   // Create a contract instance
   // const provider = new ethers.JsonRpcProvider(RPC);
-  if (window.ethereum) {
-    provider = new ethers.providers.Web3Provider(window.ethereum);
-    signer = provider.getSigner();
-  } else {
-    alert('Please install MetaMask!');
-  }
-  const contractAddress = CONTRACT_ADDRESS;
-  const contractABI = CONTRACT_ABI;
-  const contract = new ethers.Contract(contractAddress, contractABI, provider);
+
+  useEffect(() => {
+    const connectMetaMask = async () => {  
+      if (window.ethereum) {
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send('eth_requestAccounts', []); // <- this prompts user to connect MetaMask
+        const s = provider.getSigner();
+        setSigner(s);
+
+
+        // Create the contract instance after the provider is set
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+        setContract(contract);
+      } else {
+        alert('Please install MetaMask!');
+      }
+
+    };
+  
+    connectMetaMask();
+  }, []); 
+
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await contract.availableDrips();
-      setAvailableDrips(data.toString());
+      if (contract) {
+        const data = await contract.availableDrips();
+        setAvailableDrips(data.toString());
+      }
     };
 
     fetchData();
@@ -55,10 +71,11 @@ function App() {
       setAddress(value);
       if (value !== '') {
         const fetchData = async () => {
-          const data = await contract.nextDrip(value);
-          console.log("nextDrip", data.toString());
-  
-          setNext(data.toString());
+          if (contract) {
+            const data = await contract.nextDrip(value);
+            console.log("nextDrip", data.toString());
+            setNext(data.toString());
+          }
         };
         fetchData();
       }
@@ -74,15 +91,17 @@ function App() {
   };
 
   const handleButtonClick = async () => {
-    // Call the drip function
-    if (!address || signer === null) {
+    console.log("click drip: ", address, !!signer, contract);
+    if (!address || signer === null || contract === null) {
       return;
     }
     const contractWithSigner = contract.connect(signer);
 
-    const tx = await contractWithSigner.drip(address);
-    // Wait for the transaction to be mined
-    const receipt = await tx.wait();
+    try {
+      const tx = await contractWithSigner.drip(address);
+    } catch (error) {
+      console.error("Error executing drip: ", error);
+    }
   };
   return (
     <div className="App">
