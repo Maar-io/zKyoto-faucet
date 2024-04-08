@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Londrina+Solid&display=swap');
 .App {
   text-align: center;
+  background: radial-gradient(circle at center, cyan, darkblue);
+  padding-bottom: 100px;
 }
 
 .App-logo {
@@ -36,4 +38,8 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+body {
+  background-color: darkblue;
 }

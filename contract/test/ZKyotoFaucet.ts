@@ -5,6 +5,8 @@ import {
   loadFixture,
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
+const DRIP_PERIOD_SECONDS = 86400;
+
 describe("ZKyotoFaucet", function () {
   async function deployZKyotoFaucetFixture() {
     const [owner, addr1] = await hre.ethers.getSigners();
@@ -67,14 +69,28 @@ describe("ZKyotoFaucet", function () {
   });
 
   describe("nextDrip", function () {
-    it("Should return the correct time for the next drip", async function () {
+    it("Should not allow drip until time expires", async function () {
       const { zKyotoFaucet, addr1 } = await loadFixture(deployZKyotoFaucetFixture);
 
       // Connect to the contract with addr1 and call nextDrip
-      const nextDripTime = await zKyotoFaucet.connect(addr1).nextDrip(addr1.address);
+      const firstDripTime = await zKyotoFaucet.connect(addr1).nextDrip(addr1.address);
+      expect(firstDripTime).to.equal(0);
 
-      // Check that the nextDripTime is correct
-      expect(nextDripTime).to.be.gt(0);
+      // Call drip
+      await zKyotoFaucet.connect(addr1).drip(addr1.address);
+      const afterDripTime = await zKyotoFaucet.connect(addr1).nextDrip(addr1.address);
+
+      // Should fail if we try to drip before time expires
+      await time.increase(3600);
+      const nextDripTime = await zKyotoFaucet.connect(addr1).nextDrip(addr1.address);
+      expect(nextDripTime).to.equal(DRIP_PERIOD_SECONDS-3600);
+      await expect(zKyotoFaucet.connect(addr1).drip(addr1.address)).to.be.revertedWith("Already claimed in the last 24hours");
+
+      // Should allow to drip after time expires
+      await time.increase(DRIP_PERIOD_SECONDS);
+      const nextDripTime2 = await zKyotoFaucet.connect(addr1).nextDrip(addr1.address);
+      console.log("nextDripTime2", nextDripTime2);
+      await zKyotoFaucet.connect(addr1).drip(addr1.address);
     });
   });
 });

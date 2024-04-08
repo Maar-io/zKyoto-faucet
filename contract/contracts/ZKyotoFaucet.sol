@@ -16,10 +16,7 @@ contract ZKyotoFaucet is Ownable {
 
     /// @notice Drips ETH to msg sender
     function drip(address to) external {
-        require(
-            canGetDrip(claims[to]),
-            "Already claimed in the last 24hours"
-        );
+        require(canGetDrip(claims[to]), "Already claimed in the last 24hours");
         // Drip Ether
         (bool sent, ) = to.call{value: DRIP_AMOUNT}("");
         require(sent, "Failed dripping ETH");
@@ -59,13 +56,18 @@ contract ZKyotoFaucet is Ownable {
         return (block.timestamp - lastClaim > DRIP_PERIOD_SECONDS);
     }
 
-    /// @notice Returns true if a account can drip
-    function nextDrip(address account) public view returns (uint256) {
-        if (block.timestamp - claims[account] >= DRIP_PERIOD_SECONDS) {
-            return block.timestamp - claims[account];
+/// @notice Returns true if a account can drip
+function nextDrip(address account) public view returns (uint256) {
+    if (claims[account] <= block.timestamp) {
+        uint256 timeDifference = block.timestamp - claims[account];
+        if (timeDifference >= DRIP_PERIOD_SECONDS) {
+            return 0;
+        } else {
+            return DRIP_PERIOD_SECONDS - timeDifference;
         }
-        return 0;
     }
+    return 0;
+}
 
     /// @notice Allows receiving ETH
     receive() external payable {

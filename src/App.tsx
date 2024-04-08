@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
 import './App.css';
 import { RPC, CONTRACT_ADDRESS, CONTRACT_ABI } from './const';
-import logo from './logo.svg';
+import logo from "./logo.svg";
 
 declare global {
   interface Window {
@@ -13,7 +13,7 @@ declare global {
 function App() {
   const [availableDrips, setAvailableDrips] = useState<string>("");
   const [address, setAddress] = useState<string>("");
-  const [next, setNext] = useState<string>("");
+  const [next, setNext] = useState<string>("0");
 
   // Create a contract instance
   // const provider = new ethers.JsonRpcProvider(RPC);
@@ -31,21 +31,38 @@ function App() {
     };
 
     fetchData();
-  }, []);
+  }, [availableDrips]);
 
+  const getRemainingTime = () => {
+    const date = new Date(Number(next) * 1000);
+    const hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+    const seconds = date.getUTCSeconds();
+    return `${hours}:${minutes}:${seconds}`;
+  };
   const handleInputChange = (event: { target: { value: any; }; }) => {
     const value = event.target.value;
     const isValid = /^0x[a-fA-F0-9]{40}$/.test(value);
-
+  
     if (isValid || value === '') {
       setAddress(value);
-      const fetchData = async () => {
-        const data = await contract.nextDrip(value);
-        console.log("nextDrip", data.toString());
-
-        setNext(data.toString());
-      };
-      fetchData();
+      if (value !== '') {
+        const fetchData = async () => {
+          const data = await contract.nextDrip(value);
+          console.log("nextDrip", data.toString());
+  
+          setNext(data.toString());
+        };
+        fetchData();
+      }
+      else {
+        setNext("0");
+      }
+    }
+    else {
+      console.log("Invalid address");
+      setAddress("");
+      setNext("0");
     }
   };
 
@@ -65,21 +82,26 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} alt="Logo" style={{ position: 'absolute', top: 0, left: 0, width: '100px', height: '100px' }} />          <p>
-          Yoki Origins NFT dashboard
-        </p>
+        <img src="Astar_zkEVM_network_icon.png" alt="Logo" style={{ position: 'absolute', top: 0, left: 0, width: '100px', height: '100px' }} />
+        <h1>
+          zKyoto ETH Faucet
+        </h1>
       </header>
-      <p>available drips: {availableDrips}</p>
+      <img src="/faucet.png" alt="Faucet image" style={{ display: 'block', marginLeft: '0', marginRight: 'auto', width: '50%' }} />      <p>available drips: {availableDrips}</p>
       <input
         type="text"
         value={address}
         onChange={handleInputChange}
         placeholder="Enter ETH address"
         style={{ width: '350px' }}
-      />      
-      <button onClick={handleButtonClick} disabled={address === ''}>Drip</button>
-      {address && next!=="" && <p>next available drip: {new Date(Number(next) * 1000).toLocaleString()}</p>}
-    </div>
+      />
+      <button onClick={handleButtonClick} disabled={address === '' || next!=="0" }>Drip</button>
+      {address && next !== "0" && (
+        <p>
+          next available drip in: {getRemainingTime()}
+        </p>
+      )}    
+      </div>
   );
 }
 
